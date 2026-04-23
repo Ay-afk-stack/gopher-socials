@@ -2,7 +2,8 @@ package store
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Storage struct {
@@ -14,9 +15,9 @@ type Storage struct {
 	}
 }
 
-func NewStorage(db *sql.DB) Storage {
+func NewStorage(pool *pgxpool.Pool) Storage {
 	return Storage{
-		Posts: &PostStore{db},
-		Users: &UserStore{db},
+		Posts: &PostStore{pool},
+		Users: &UserStore{pool},
 	}
 }

@@ -2,10 +2,9 @@ package store
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
-	"github.com/lib/pq"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Post struct{
@@ -19,7 +18,7 @@ type Post struct{
 }
 
 type PostStore struct {
-	db *sql.DB
+	pool *pgxpool.Pool
 }
 
 func(s *PostStore) Create(ctx context.Context, post *Post) error {
@@ -29,13 +28,13 @@ func(s *PostStore) Create(ctx context.Context, post *Post) error {
 		RETURNING id, created_at, updated_at;
 	`
 
-	if err := s.db.QueryRowContext(
+	if err := s.pool.QueryRow(
 		ctx,
 		query,
 		post.Content,
 		post.Title,
 		post.UserID,
-		pq.Array(post.Tags),
+		post.Tags,
 		).Scan(
 			&post.ID,
 			&post.CreatedAt,

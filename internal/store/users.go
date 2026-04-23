@@ -2,8 +2,9 @@ package store
 
 import (
 	"context"
-	"database/sql"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type User struct {
@@ -16,7 +17,7 @@ type User struct {
 }
 
 type UserStore struct {
-	db *sql.DB
+	pool *pgxpool.Pool
 }
 
 func(s *UserStore) Create(ctx context.Context, user *User) error {
@@ -26,7 +27,7 @@ func(s *UserStore) Create(ctx context.Context, user *User) error {
 		RETURNING id, created_at, updated_at;
 	`
 
-	if err := s.db.QueryRowContext(
+	if err := s.pool.QueryRow(
 		ctx,
 		query,
 		user.Username,
@@ -39,6 +40,6 @@ func(s *UserStore) Create(ctx context.Context, user *User) error {
 	); err != nil {
 		return err
 	}
-	
+
 	return nil
 }
