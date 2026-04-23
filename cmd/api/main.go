@@ -17,7 +17,7 @@ func main() {
 	cfg := config{
 		addr: env.GetString("ADDR", ":8080"),
 		db: dbConfig{
-			databaseURL: env.GetString("DB_URL", "postgres://username:password@localhost:5432/social?sslmode=disable"),
+			databaseURL: env.GetString("DB_URL", "postgres://postgres:postgres@localhost:5432/social?sslmode=disable"),
 			maxConns: env.GetInt("DB_MAX_CONNS", 20),
 			minConns: env.GetInt("DB_MIN__CONNS", 5),
 			maxConnIdleTime: env.GetString("DB_MAX_IDLE_TIME", "15min"),
@@ -35,6 +35,9 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+	defer pool.Close()
+
+	log.Println("database connection pool established!")
 
 	store := store.NewStorage(pool)
 
