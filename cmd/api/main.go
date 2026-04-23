@@ -9,6 +9,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
+const version = "0.0.1"
+
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("error loading .env file: ", err)
@@ -23,6 +25,7 @@ func main() {
 			maxConnIdleTime: env.GetString("DB_MAX_IDLE_TIME", "15min"),
 			dbTimeout: env.GetString("DB_TIMEOUT", "10s"),
 		},
+		env: env.GetString("ENV", "development"),
 	}
 
 	pool, err := db.New(

@@ -2,8 +2,10 @@ package store
 
 import (
 	"context"
+	"errors"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -44,4 +46,33 @@ func(s *PostStore) Create(ctx context.Context, post *Post) error {
 		}
 
 		return nil
+}
+
+func (s *PostStore) GetByID(ctx context.Context, id int64) (*Post, error) {
+	query := `
+		SELECT id, title, content, tags, user_id, created_at, updated_at
+		FROM posts 
+		WHERE id = $1;
+	`
+
+	var post Post
+
+	if err := s.pool.QueryRow(ctx, query, id).Scan(
+		&post.ID,
+		&post.Title,
+		&post.Content,
+		&post.Tags,
+		&post.UserID,
+		&post.CreatedAt,
+		&post.UpdatedAt,
+	); err != nil {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			return nil, ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &post, nil
 }
