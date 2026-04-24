@@ -15,6 +15,7 @@ type Post struct{
 	Title string `json:"title"`
 	UserID int64 `json:"user_id"`
 	Tags []string `json:"tags"`
+	Comments []Comment `json:"comments"`
 	CreatedAt time.Time	`json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -51,7 +52,7 @@ func(s *PostStore) Create(ctx context.Context, post *Post) error {
 func (s *PostStore) GetByID(ctx context.Context, id int64) (*Post, error) {
 	query := `
 		SELECT id, title, content, tags, user_id, created_at, updated_at
-		FROM posts 
+		FROM posts
 		WHERE id = $1;
 	`
 
