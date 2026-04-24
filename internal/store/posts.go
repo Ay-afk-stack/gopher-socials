@@ -14,8 +14,8 @@ type Post struct{
 	Content string `json:"content"`
 	Title string `json:"title"`
 	UserID int64 `json:"user_id"`
-	Tags []string `json:"tags"`
-	Comments []Comments `json:"comments"`
+	Tags []string `json:"tags,omitempty"`
+	Comments []Comments `json:"comments,omitempty"`
 	CreatedAt time.Time	`json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -76,4 +76,44 @@ func (s *PostStore) GetByID(ctx context.Context, id int64) (*Post, error) {
 	}
 
 	return &post, nil
+}
+
+func (s *PostStore) DeleteByID(ctx context.Context, id int64) error {
+	query := `
+		DELETE FROM posts
+		WHERE id = $1;
+	`
+
+	cmd, err := s.pool.Exec(ctx, query, id)
+	if err != nil {
+		return nil
+	}
+
+	if cmd.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
+
+func (s *PostStore) UpdateByID(ctx context.Context, id int64, post *Post) error {
+	query := `
+		UPDATE posts
+		SET
+			title = $1,
+			content = $2
+		WHERE id = $3
+	`
+
+	cmd, err := s.pool.Exec(ctx, query, post.Title, post.Content, post.ID)
+	if err != nil {
+		return err
+	}
+
+	if cmd.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strconv"
@@ -9,10 +10,19 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+type postKey string
+
+const postCtx postKey = "post"
+
 type CreatePostPayload struct {
 	Title string `json:"title" validate:"required,max=200"`
 	Content string `json:"content" validate:"required,max=1000"`
 	Tags []string `json:"tags"`
+}
+
+type UpdatePostPayload struct {
+	Title *string `json:"title" validate:"omitempty,max=100"`
+	Content *string `json:"content" validate:"omitempty,max=1000"`
 }
 
 func (app *application) createPostHandlers(w http.ResponseWriter, r *http.Request) {
@@ -50,18 +60,25 @@ func (app *application) createPostHandlers(w http.ResponseWriter, r *http.Reques
 }
 
 func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
+	post := app.getPostFromCtx(r)
 
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	comments, err := app.store.Comments.GetByPostID(r.Context(), post.ID)
 	if err != nil {
-		app.badRequestError(w, r, err)
+		app.internalServerError(w, r, err)
 		return
 	}
+	post.Comments = comments
 
-	ctx := r.Context()
+	if err := WriteJSON(w, http.StatusOK, post); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
 
-	post, err := app.store.Posts.GetByID(ctx, id)
-	if err != nil {
+func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request) {
+	post := app.getPostFromCtx(r)
+	
+	if err := app.store.Posts.DeleteByID(r.Context(), post.ID); err != nil {
 		switch {
 		case errors.Is(err, store.ErrNotFound):
 			app.notFoundError(w, r, err)
@@ -71,15 +88,78 @@ func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	comments, err := app.store.Comments.GetByPostID(ctx, id)
-	if err != nil {
-		app.internalServerError(w, r, err)
-		return
-	}
-	post.Comments = comments
+	w.WriteHeader(http.StatusNoContent)
+}
 
-	if err = WriteJSON(w, http.StatusOK, post); err != nil {
+func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request) {
+	post := app.getPostFromCtx(r)
+
+	var payload UpdatePostPayload
+	if err := ReadJSON(w, r, &payload); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	if err := validate.Struct(payload); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	if payload.Title != nil {
+		post.Title = *payload.Title
+	}
+
+	if payload.Content != nil {
+		post.Content = *payload.Content
+	}
+
+	if err := app.store.Posts.UpdateByID(r.Context(), post.ID, post); err != nil {
+		switch {
+		case errors.Is(err, store.ErrNotFound):
+			app.notFoundError(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	if err := WriteJSON(w, http.StatusOK, post); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
+}
+
+func (app *application) postContextMiddleware(next http.Handler) http.Handler {
+		
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			idStr := chi.URLParam(r, "id")
+				
+			id, err := strconv.ParseInt(idStr, 10, 64)
+			if err != nil {
+				app.badRequestError(w, r, err)
+				return
+			}
+
+			ctx := r.Context()
+			
+			post, err := app.store.Posts.GetByID(ctx, id)
+			if err != nil {
+				switch {
+				case errors.Is(err, store.ErrNotFound):
+					app.notFoundError(w, r, err)
+				default:
+					app.internalServerError(w, r, err)
+				}
+				return
+			}
+
+			ctx = context.WithValue(ctx, postCtx, post)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+}
+
+func (app *application) getPostFromCtx(r *http.Request) *store.Post {
+	post := r.Context().Value(postCtx).(*store.Post)
+	return post
 }
