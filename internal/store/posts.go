@@ -16,6 +16,7 @@ type Post struct{
 	UserID int64 `json:"user_id"`
 	Tags []string `json:"tags"`
 	Comments []Comments `json:"comments"`
+	Version int `json:"version"`
 	CreatedAt time.Time	`json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -51,7 +52,7 @@ func(s *PostStore) Create(ctx context.Context, post *Post) error {
 
 func (s *PostStore) GetByID(ctx context.Context, id int64) (*Post, error) {
 	query := `
-		SELECT id, title, content, tags, user_id, created_at, updated_at
+		SELECT id, title, content, tags, user_id, created_at, updated_at, version
 		FROM posts
 		WHERE id = $1;
 	`
@@ -66,6 +67,7 @@ func (s *PostStore) GetByID(ctx context.Context, id int64) (*Post, error) {
 		&post.UserID,
 		&post.CreatedAt,
 		&post.UpdatedAt,
+		&post.Version,
 	); err != nil {
 		switch {
 		case errors.Is(err, pgx.ErrNoRows):
@@ -101,17 +103,26 @@ func (s *PostStore) UpdateByID(ctx context.Context, id int64, post *Post) error 
 		UPDATE posts
 		SET
 			title = $1,
-			content = $2
-		WHERE id = $3
+			content = $2,
+			version = version + 1
+		WHERE id = $3 AND version = $4
+		RETURNING version;
 	`
 
-	cmd, err := s.pool.Exec(ctx, query, post.Title, post.Content, post.ID)
-	if err != nil {
-		return err
-	}
-
-	if cmd.RowsAffected() == 0 {
-		return ErrNotFound
+	if err := s.pool.QueryRow(
+		ctx,
+		query,
+		post.Title,
+		post.Content,
+		post.ID,
+		post.Version,
+	).Scan(&post.Version); err != nil {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			return ErrNotFound
+		default:
+			return err
+		}
 	}
 
 	return nil
