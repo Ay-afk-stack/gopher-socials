@@ -19,11 +19,15 @@ type Storage struct {
 	Users interface {
 		Create(context.Context, *User) error
 	}
+	Comments interface{
+		GetByPostID(context.Context, int64) ([]Comments, error)
+	}
 }
 
 func NewStorage(pool *pgxpool.Pool) Storage {
 	return Storage{
 		Posts: &PostStore{pool},
 		Users: &UserStore{pool},
+		Comments: &CommentStore{pool},
 	}
 }
