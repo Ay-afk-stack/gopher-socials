@@ -15,7 +15,7 @@ type Post struct{
 	Title string `json:"title"`
 	UserID int64 `json:"user_id"`
 	Tags []string `json:"tags"`
-	Comments []Comments `json:"comments"`
+	Comments []Comment `json:"comments"`
 	Version int `json:"version"`
 	CreatedAt time.Time	`json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -31,6 +31,9 @@ func(s *PostStore) Create(ctx context.Context, post *Post) error {
 		VALUES ($1, $2, $3, $4)
 		RETURNING id, created_at, updated_at;
 	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeout)
+	defer cancel()
 
 	if err := s.pool.QueryRow(
 		ctx,
@@ -56,6 +59,9 @@ func (s *PostStore) GetByID(ctx context.Context, id int64) (*Post, error) {
 		FROM posts
 		WHERE id = $1;
 	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeout)
+	defer cancel()
 
 	var post Post
 
@@ -86,6 +92,9 @@ func (s *PostStore) DeleteByID(ctx context.Context, id int64) error {
 		WHERE id = $1;
 	`
 
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeout)
+	defer cancel()
+
 	cmd, err := s.pool.Exec(ctx, query, id)
 	if err != nil {
 		return nil
@@ -108,6 +117,9 @@ func (s *PostStore) UpdateByID(ctx context.Context, id int64, post *Post) error 
 		WHERE id = $3 AND version = $4
 		RETURNING version;
 	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeout)
+	defer cancel()
 
 	if err := s.pool.QueryRow(
 		ctx,

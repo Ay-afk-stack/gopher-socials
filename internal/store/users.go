@@ -24,8 +24,11 @@ func(s *UserStore) Create(ctx context.Context, user *User) error {
 	query := `
 		INSERT INTO users (username, email, password)
 		VALUES ($1, $2, $3)
-		RETURNING id, created_at, updated_at;
+		RETURNING id, created_at;
 	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeout)
+	defer cancel()
 
 	if err := s.pool.QueryRow(
 		ctx,
@@ -36,7 +39,6 @@ func(s *UserStore) Create(ctx context.Context, user *User) error {
 	).Scan(
 		&user.ID,
 		&user.CreatedAt,
-		&user.UpdatedAt,
 	); err != nil {
 		return err
 	}

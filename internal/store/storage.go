@@ -3,12 +3,14 @@ package store
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var (
 	ErrNotFound = errors.New("records not found")
+	QueryTimeout = time.Second * 5
 )
 
 type Storage struct {
@@ -22,7 +24,8 @@ type Storage struct {
 		Create(context.Context, *User) error
 	}
 	Comments interface{
-		GetByPostID(context.Context, int64) ([]Comments, error)
+		Create(context.Context, *Comment) error
+		GetByPostID(context.Context, int64) ([]Comment, error)
 	}
 }
 

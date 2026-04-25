@@ -7,7 +7,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type Comments struct {
+type Comment struct {
 	ID int64 `json:"id"`
 	PostID int64 `json:"post_id"`
 	UserID int64 `json:"user_id"`
@@ -20,7 +20,7 @@ type CommentStore struct {
 	pool *pgxpool.Pool
 }
 
-func (s *CommentStore) GetByPostID(ctx context.Context, id int64) ([]Comments, error) {
+func (s *CommentStore) GetByPostID(ctx context.Context, id int64) ([]Comment, error) {
 	query := `
 		SELECT 
 			c.id,
@@ -37,16 +37,19 @@ func (s *CommentStore) GetByPostID(ctx context.Context, id int64) ([]Comments, e
 		ORDER BY c.created_at DESC;
 	`
 
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeout)
+	defer cancel()
+
 	rows, err := s.pool.Query(ctx, query, id)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	comments := []Comments{}
+	comments := []Comment{}
 
 	for rows.Next(){
-		c := Comments{}
+		c := Comment{}
 		if err := rows.Scan(
 			&c.ID,
 			&c.PostID,
@@ -67,6 +70,22 @@ func (s *CommentStore) GetByPostID(ctx context.Context, id int64) ([]Comments, e
 	}
 
 	return comments, nil
+}
 
+func (s *CommentStore) Create(ctx context.Context, comment *Comment) error {
+	query := `
+		INSERT INTO comments(post_id, user_id, content)
+		VALUES ($1, $2, $3)
+		RETURNING id, created_at;
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeout)
+	defer cancel()
+
+	if err := s.pool.QueryRow(ctx, query, comment.PostID, comment.UserID, comment.CreatedAt).Scan(&comment.ID, &comment.CreatedAt); err != nil {
+		return err
+	}
+
+	return nil
 
 }
