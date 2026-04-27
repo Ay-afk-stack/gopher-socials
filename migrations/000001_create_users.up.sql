@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS users(
     id BIGSERIAL PRIMARY KEY,
     username VARCHAR(255) UNIQUE NOT NULL,
     email citext UNIQUE NOT NULL,
-    password bytea NOT NULL,
+    password TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
