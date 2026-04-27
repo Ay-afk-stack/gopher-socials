@@ -10,6 +10,7 @@ import (
 
 var (
 	ErrNotFound = errors.New("records not found")
+	ErrConflict = errors.New("records already exist")
 	QueryTimeout = time.Second * 5
 )
 
@@ -28,6 +29,10 @@ type Storage struct {
 		Create(context.Context, *Comment) error
 		GetByPostID(context.Context, int64) ([]Comment, error)
 	}
+	Followers interface{
+		Follow(context.Context, int64, int64) error
+		UnFollow(context.Context, int64, int64) error
+	}
 }
 
 func NewStorage(pool *pgxpool.Pool) Storage {
@@ -35,5 +40,6 @@ func NewStorage(pool *pgxpool.Pool) Storage {
 		Posts: &PostStore{pool},
 		Users: &UserStore{pool},
 		Comments: &CommentStore{pool},
+		Followers: &FollowerStore{pool},
 	}
 }
