@@ -9,17 +9,17 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type Post struct{
-	ID int64 `json:"id"`
-	Content string `json:"content"`
-	Title string `json:"title"`
-	UserID int64 `json:"user_id"`
-	Tags []string `json:"tags"`
-	Comments []Comment `json:"comments"`
-	Version int `json:"version"`
-	CreatedAt time.Time	`json:"created_at"`
+type Post struct {
+	ID        int64     `json:"id"`
+	Content   string    `json:"content"`
+	Title     string    `json:"title"`
+	UserID    int64     `json:"user_id"`
+	Tags      []string  `json:"tags"`
+	Comments  []Comment `json:"comments"`
+	Version   int       `json:"version"`
+	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-	User User `json:"user"`
+	User      User      `json:"user"`
 }
 
 type PostWithMetadata struct {
@@ -31,7 +31,7 @@ type PostStore struct {
 	pool *pgxpool.Pool
 }
 
-func(s *PostStore) Create(ctx context.Context, post *Post) error {
+func (s *PostStore) Create(ctx context.Context, post *Post) error {
 	query := `
 		INSERT INTO posts (content, title, user_id, tags)
 		VALUES ($1, $2, $3, $4)
@@ -48,15 +48,15 @@ func(s *PostStore) Create(ctx context.Context, post *Post) error {
 		post.Title,
 		post.UserID,
 		post.Tags,
-		).Scan(
-			&post.ID,
-			&post.CreatedAt,
-			&post.UpdatedAt,
-		); err != nil {
-			return err
-		}
+	).Scan(
+		&post.ID,
+		&post.CreatedAt,
+		&post.UpdatedAt,
+	); err != nil {
+		return err
+	}
 
-		return nil
+	return nil
 }
 
 func (s *PostStore) GetByID(ctx context.Context, id int64) (*Post, error) {

@@ -20,11 +20,10 @@ func New(databaseURL string, maxConns, minConns int, maxIdleTime, dbTimeout stri
 	if err != nil {
 		return nil, err
 	}
-	
+
 	cfg.MaxConnIdleTime = idleDuration
 	cfg.MaxConnLifetime = time.Hour
 	cfg.HealthCheckPeriod = time.Minute
-
 
 	timeoutDuration, err := time.ParseDuration(dbTimeout)
 	if err != nil {

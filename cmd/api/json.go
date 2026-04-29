@@ -31,25 +31,25 @@ func ReadJSON(w http.ResponseWriter, r *http.Request, data any) error {
 
 func WriteJSONError(w http.ResponseWriter, status int, message string) error {
 	type envelope struct {
-		Success bool `json:"succes"`
-		Error string `json:"error"`
+		Success bool   `json:"succes"`
+		Error   string `json:"error"`
 	}
 
 	return WriteJSON(w, status, &envelope{
 		Success: false,
-		Error: message,
-		},
+		Error:   message,
+	},
 	)
 }
 
 func (app *application) jsonResponse(w http.ResponseWriter, status int, data any) error {
 	type envelope struct {
 		Success bool `json:"success"`
-		Data any `json:"data"`
+		Data    any  `json:"data"`
 	}
 
 	return WriteJSON(w, status, &envelope{
 		Success: true,
-		Data: data,
+		Data:    data,
 	})
 }

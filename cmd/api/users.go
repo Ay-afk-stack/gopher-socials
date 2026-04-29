@@ -17,7 +17,6 @@ type FollowerUser struct {
 	UserID int64 `json:"user_id"`
 }
 
-
 func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromContext(r)
 
@@ -26,7 +25,6 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-
 
 func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
 	followerUser := getUserFromContext(r)
@@ -79,7 +77,6 @@ func (app *application) unFollowUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-
 func (app *application) userContextHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
@@ -92,7 +89,7 @@ func (app *application) userContextHandler(next http.Handler) http.Handler {
 
 		user, err := app.store.Users.GetByID(ctx, userID)
 		if err != nil {
-			switch err{
+			switch err {
 			case store.ErrNotFound:
 				app.notFoundError(w, r, err)
 			default:
@@ -106,7 +103,7 @@ func (app *application) userContextHandler(next http.Handler) http.Handler {
 	})
 }
 
-func getUserFromContext(r *http.Request) *store.User{
+func getUserFromContext(r *http.Request) *store.User {
 	user := r.Context().Value(userCtx).(*store.User)
 	return user
 }

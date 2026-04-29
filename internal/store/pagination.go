@@ -7,16 +7,16 @@ import (
 )
 
 type PaginationFeedQuery struct {
-	Limit  int `json:"limit" validate:"gte=1,lte=20"`
-	Offset int `json:"offset" validate:"gte=0"`
-	Sort string `json:"sort" validate:"oneof=asc desc"`
-	Tags []string `json:"tags" validate:"max=5"`
-	Search string `json:"search" validate:"max=100"`
+	Limit  int      `json:"limit" validate:"gte=1,lte=20"`
+	Offset int      `json:"offset" validate:"gte=0"`
+	Sort   string   `json:"sort" validate:"oneof=asc desc"`
+	Tags   []string `json:"tags" validate:"max=5"`
+	Search string   `json:"search" validate:"max=100"`
 }
 
-func (p PaginationFeedQuery) Parse(r *http.Request) (PaginationFeedQuery, error) { 
+func (p PaginationFeedQuery) Parse(r *http.Request) (PaginationFeedQuery, error) {
 	queryString := r.URL.Query()
-	
+
 	limit := queryString.Get("limit")
 	if limit != "" {
 		l, err := strconv.Atoi(limit)

@@ -15,8 +15,8 @@ var usernames = []string{
 	"Rohit", "Puja", "Manish", "Sarita", "Kiran", "Deepak", "Sunita",
 	"Rajesh", "Binita", "Ashok", "Rekha", "Prakash", "Alisha", "Santosh",
 	"Sabina", "Gopal", "Kalpana", "Bijay", "Asmita", "Hari", "Rita",
-	"Milan", "Sita", "Dipesh", "Karuna", "Ganesh", "Indira", "Roshan", 
-	"Sharmila", "Krishna", "Laxmi", "Suraj","Babita",
+	"Milan", "Sita", "Dipesh", "Karuna", "Ganesh", "Indira", "Roshan",
+	"Sharmila", "Krishna", "Laxmi", "Suraj", "Babita",
 }
 
 var titles = []string{
@@ -197,11 +197,11 @@ func Seed(store store.Storage) {
 	for _, user := range users {
 		if err := store.Users.Create(ctx, user); err != nil {
 			log.Printf("error seeding users: %s", err)
-			return 
+			return
 		}
 	}
 
-	posts := generatePosts(100, users) 
+	posts := generatePosts(100, users)
 
 	for _, post := range posts {
 		if err := store.Posts.Create(ctx, post); err != nil {
@@ -210,7 +210,7 @@ func Seed(store store.Storage) {
 		}
 	}
 
-	comments := generateComments(100, users, posts) 
+	comments := generateComments(100, users, posts)
 
 	for _, comment := range comments {
 		if err := store.Comments.Create(ctx, comment); err != nil {
@@ -226,7 +226,7 @@ func generateUsers(num int) []*store.User {
 	for i := 0; i < num; i++ {
 		users[i] = &store.User{
 			Username: strings.ToLower(usernames[i%len(usernames)] + fmt.Sprintf("%d", i)),
-			Email: strings.ToLower(usernames[i%len(usernames)] + fmt.Sprintf("%d", i)) + "@example.com",
+			Email:    strings.ToLower(usernames[i%len(usernames)]+fmt.Sprintf("%d", i)) + "@example.com",
 			Password: "123456",
 		}
 	}
@@ -238,12 +238,12 @@ func generatePosts(num int, users []*store.User) []*store.Post {
 	posts := make([]*store.Post, num)
 
 	for i := 0; i < num; i++ {
-		user :=  users[rand.Intn(len(usernames))]
+		user := users[rand.Intn(len(usernames))]
 
 		posts[i] = &store.Post{
-			Title: titles[rand.Intn(len(titles))],
+			Title:   titles[rand.Intn(len(titles))],
 			Content: contents[rand.Intn(len(contents))],
-			UserID: user.ID,
+			UserID:  user.ID,
 			Tags: []string{
 				tags[rand.Intn(len(tags))],
 				tags[rand.Intn(len(tags))],
@@ -262,8 +262,8 @@ func generateComments(num int, users []*store.User, posts []*store.Post) []*stor
 		post := posts[rand.Intn(len(posts))]
 
 		comments[i] = &store.Comment{
-			PostID: post.ID,
-			UserID: user.ID,
+			PostID:  post.ID,
+			UserID:  user.ID,
 			Content: commentContents[rand.Intn(len(commentContents))],
 		}
 	}
