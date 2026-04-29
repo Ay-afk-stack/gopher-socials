@@ -148,6 +148,7 @@ func (s *PostStore) UpdateByID(ctx context.Context, id int64, post *Post) error 
 }
 
 func (s *PostStore) GetFeed(ctx context.Context, userID int64, fs *PaginationFeedQuery) ([]PostWithMetadata, error) {
+
 	query := `
 	SELECT
 		p.id,
@@ -166,7 +167,10 @@ func (s *PostStore) GetFeed(ctx context.Context, userID int64, fs *PaginationFee
 	ON u.id = p.user_id
 	JOIN followers f
 	ON f.follower_id = p.user_id OR p.user_id = $1
-	WHERE f.user_id = $1 OR p.user_id = $1
+	WHERE 
+	f.user_id = $1 AND
+	(p.title ILIKE '%' || $4 || '%' OR p."content" ILIKE '%' || $4 || '%') AND
+	(p.tags && $5 OR $5 IS NULL)
 	GROUP BY p.id, u.username, u.email
 	ORDER BY p.created_at ` + fs.Sort + `
 	LIMIT $2 OFFSET $3;
@@ -175,7 +179,7 @@ func (s *PostStore) GetFeed(ctx context.Context, userID int64, fs *PaginationFee
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeout)
 	defer cancel()
 
-	rows, err := s.pool.Query(ctx, query, userID, fs.Limit, fs.Offset)
+	rows, err := s.pool.Query(ctx, query, userID, fs.Limit, fs.Offset, fs.Search, fs.Tags)
 	if err != nil {
 		return nil, err
 	}
