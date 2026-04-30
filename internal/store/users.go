@@ -41,7 +41,7 @@ type UserStore struct {
 	pool *pgxpool.Pool
 }
 
-func (s *UserStore) Create(ctx context.Context, user *User) error {
+func (s *UserStore) Create(ctx context.Context, tx pgx.Tx, user *User) error {
 	query := `
 		INSERT INTO users (username, email, password)
 		VALUES ($1, $2, $3)
@@ -98,8 +98,32 @@ func (s *UserStore) GetByID(ctx context.Context, userID int64) (*User, error) {
 
 }
 
-func (s *UserStore) CreateAndInvite(ctx context.Context, user *User, token string) (error) {
+func (s *UserStore) CreateAndInvite(ctx context.Context, user *User, token string, invitationExp time.Duration) (error) {
+	return withTx(s.pool, ctx, func(tx pgx.Tx) error {
+		if err := s.Create(ctx, tx, user); err != nil {
+			return err
+		}
 
+		if err := s.CreateUserInvitation(ctx, tx, token, invitationExp, user.ID); err != nil {
+			return err
+		}
+		
+		return nil
+	})
+}
+
+func (s *UserStore) CreateUserInvitation(ctx context.Context, tx pgx.Tx, token string, exp time.Duration, userID int64) error {
+	query := `
+		INSERT INTO user_invitations (token, user_id, expiry) 
+		VALUES ($1, $2, $3);
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeout)
+	defer cancel()
+
+	if _, err := tx.Exec(ctx, query, userID, userID, time.Now().Add(exp)); err != nil {
+		return err
+	}
 	
 	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -23,9 +24,10 @@ type Storage struct {
 		GetFeed(context.Context, int64, *PaginationFeedQuery) ([]PostWithMetadata, error)
 	}
 	Users interface {
-		Create(context.Context, *User) error
+		Create(context.Context, pgx.Tx, *User) error
 		GetByID(context.Context, int64) (*User, error)
-		CreateAndInvite(context.Context, *User, string) (error)
+		CreateAndInvite(context.Context, *User, string, time.Duration) (error)
+		CreateUserInvitation(context.Context, pgx.Tx, string, time.Duration, int64) error
 	}
 	Comments interface {
 		Create(context.Context, *Comment) error
@@ -44,4 +46,18 @@ func NewStorage(pool *pgxpool.Pool) Storage {
 		Comments:  &CommentStore{pool},
 		Followers: &FollowerStore{pool},
 	}
+}
+
+func withTx(pool *pgxpool.Pool, ctx context.Context, fn func(pgx.Tx) error) error {
+	tx, err := pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return err
+	}
+
+	if err := fn(tx); err != nil {
+		_ = tx.Rollback(ctx)
+		return err
+	}
+
+	return tx.Commit(ctx)
 }

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/Ay-afk-stack/gopher-socials/internal/store"
+	"github.com/jackc/pgx/v5"
 )
 
 var usernames = []string{
@@ -194,8 +195,10 @@ func Seed(store store.Storage) {
 
 	users := generateUsers(100)
 
+	var tx pgx.Tx
+
 	for _, user := range users {
-		if err := store.Users.Create(ctx, user); err != nil {
+		if err := store.Users.Create(ctx, tx, user); err != nil {
 			log.Printf("error seeding users: %s", err)
 			return
 		}

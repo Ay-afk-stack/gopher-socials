@@ -1,0 +1,3 @@
+ALTER TABLE 
+    user_invitations
+ADD COLUMN expiry TIMESTAMPTZ NOT NULL;
