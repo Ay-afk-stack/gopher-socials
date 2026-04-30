@@ -28,6 +28,9 @@ func main() {
 			dbTimeout:       env.GetString("DB_TIMEOUT", "10s"),
 		},
 		env: env.GetString("ENV", "development"),
+		mail: mailConfig{
+			exp: env.GetString("MAIL_TOKEN_EXP", "5m"),
+		},
 	}
 
 	pool, err := db.New(

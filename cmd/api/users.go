@@ -107,3 +107,21 @@ func getUserFromContext(r *http.Request) *store.User {
 	user := r.Context().Value(userCtx).(*store.User)
 	return user
 }
+
+func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Request) {
+	token := chi.URLParam(r, "token")
+
+	if err := app.store.Users.Activate(r.Context(), token); err != nil {
+		switch err {
+		case store.ErrNotFound:
+			app.notFoundError(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}

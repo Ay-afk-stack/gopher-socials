@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"net/http"
+	"time"
 
 	"github.com/Ay-afk-stack/gopher-socials/internal/store"
 	"github.com/google/uuid"
@@ -15,7 +16,10 @@ type RegisterUserPayload struct {
 	Password string `json:"password" validate:"required,min=3,max=72"`
 }
 
-
+type UserWithToken struct {
+	*store.User
+	Token string `json:"token"`
+}
 
 
 func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -45,12 +49,23 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	hash := sha256.Sum256([]byte(plainToken))
 	hashToken := hex.EncodeToString(hash[:])
 
-	if err := app.store.Users.CreateAndInvite(r.Context(), user, hashToken, app.config.mail.exp); err != nil {
+	tokenExp, err := time.ParseDuration(app.config.mail.exp)
+	if err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
 
-	if err := app.jsonResponse(w, http.StatusCreated, nil); err != nil {
+	if err := app.store.Users.CreateAndInvite(r.Context(), user, hashToken, tokenExp); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	userWithToken := UserWithToken{
+		User: user,
+		Token: plainToken,
+	}
+
+	if err := app.jsonResponse(w, http.StatusCreated, userWithToken); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
