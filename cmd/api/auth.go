@@ -21,7 +21,7 @@ type RegisterUserPayload struct {
 func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	var payload RegisterUserPayload
 
-	if err := ReadJSON(w,r, payload); err != nil {
+	if err := ReadJSON(w,r, &payload); err != nil {
 		app.badRequestError(w, r, err)
 		return
 	}
@@ -47,9 +47,11 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 
 	if err := app.store.Users.CreateAndInvite(r.Context(), user, hashToken, app.config.mail.exp); err != nil {
 		app.internalServerError(w, r, err)
+		return
 	}
 
 	if err := app.jsonResponse(w, http.StatusCreated, nil); err != nil {
 		app.internalServerError(w, r, err)
+		return
 	}
 }

@@ -56,7 +56,7 @@ func (s *UserStore) Create(ctx context.Context, tx pgx.Tx, user *User) error {
 		query,
 		user.Username,
 		user.Email,
-		user.Password,
+		user.Password.Hash,
 	).Scan(
 		&user.ID,
 		&user.CreatedAt,
@@ -121,7 +121,7 @@ func (s *UserStore) CreateUserInvitation(ctx context.Context, tx pgx.Tx, token s
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeout)
 	defer cancel()
 
-	if _, err := tx.Exec(ctx, query, userID, userID, time.Now().Add(exp)); err != nil {
+	if _, err := tx.Exec(ctx, query, token, userID, time.Now().Add(exp)); err != nil {
 		return err
 	}
 	
