@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Ay-afk-stack/gopher-socials/internal/mailer"
 	"github.com/Ay-afk-stack/gopher-socials/internal/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -14,7 +15,7 @@ type application struct {
 	config config
 	store  store.Storage
 	logger *zap.SugaredLogger
-
+	mailer mailer.Client
 }
 
 type config struct {
@@ -22,10 +23,17 @@ type config struct {
 	db   dbConfig
 	env  string
 	mail mailConfig
+	frontendURL string
 }
 
 type mailConfig struct {
+	resend resendConfig
 	exp string
+}
+
+type resendConfig struct {
+	apiKey string
+	fromEmail string
 }
 
 type dbConfig struct {

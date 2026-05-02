@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -63,6 +64,20 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	userWithToken := UserWithToken{
 		User: user,
 		Token: plainToken,
+	}
+
+	activationURL := fmt.Sprintf("%s/confirm/%s", app.config.frontendURL, plainToken)
+
+	if err := app.mailer.Send(user.Username, user.Email, activationURL); err != nil {
+		app.logger.Errorw("error sending welcome email", "error", err)
+
+		if err := app.store.Users.Delete(r.Context(), user.ID); err != nil {
+			app.logger.Errorw("error deleting user", "error", err)
+			return
+		}
+
+		app.internalServerError(w, r, err)
+		return
 	}
 
 	if err := app.jsonResponse(w, http.StatusCreated, userWithToken); err != nil {

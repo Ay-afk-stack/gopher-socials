@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/Ay-afk-stack/gopher-socials/internal/db"
 	"github.com/Ay-afk-stack/gopher-socials/internal/env"
+	"github.com/Ay-afk-stack/gopher-socials/internal/mailer"
 	"github.com/Ay-afk-stack/gopher-socials/internal/store"
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
@@ -20,6 +21,7 @@ func main() {
 
 	cfg := config{
 		addr: env.GetString("ADDR", ":8080"),
+		frontendURL: env.GetString("FRONTEND_URL", "http://localhost:4000"),
 		db: dbConfig{
 			databaseURL:     env.GetString("DB_URL", "postgres://postgres:postgres@localhost:5432/social?sslmode=disable"),
 			maxConns:        env.GetInt("DB_MAX_CONNS", 20),
@@ -30,6 +32,10 @@ func main() {
 		env: env.GetString("ENV", "development"),
 		mail: mailConfig{
 			exp: env.GetString("MAIL_TOKEN_EXP", "5m"),
+			resend: resendConfig{
+				apiKey: env.GetString("RESEND_API_KEY", ""),
+				fromEmail: env.GetString("FROM_MAIL", "onboarding@resend.dev"),
+			},
 		},
 	}
 
@@ -49,10 +55,13 @@ func main() {
 
 	store := store.NewStorage(pool)
 
+	mailer := mailer.NewResendMailer(cfg.mail.resend.apiKey, cfg.mail.resend.fromEmail)
+
 	app := &application{
 		config: cfg,
 		store:  store,
 		logger: logger,
+		mailer: mailer,
 	}
 
 	mux := app.mount()
