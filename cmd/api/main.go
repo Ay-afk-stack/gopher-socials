@@ -37,6 +37,12 @@ func main() {
 				fromEmail: env.GetString("FROM_MAIL", "onboarding@resend.dev"),
 			},
 		},
+		auth: authConfig{
+			basic: basicConfig{
+				user: env.GetString("AUTH_BASIC_USER", "admin"),
+				pass: env.GetString("AUTH_BASIC_PASS", "admin"),
+			},
+		},
 	}
 
 	pool, err := db.New(

@@ -36,6 +36,7 @@ func (m *ResendMailer) Send(username, email, activationURL string) error {
 		Html: `
 			<html>
 				<body>
+				<h3>Hi ` + username + `</h3>
 				<p>Please proceed to following URL to verify your account:</p><br>
 				<a href = "`+ activationURL +`">
 			`+ activationURL + 
@@ -48,9 +49,6 @@ func (m *ResendMailer) Send(username, email, activationURL string) error {
 	for i := 0; i < MaxRetries; i++ {
 		response, err := m.client.Emails.Send(params)
 		if err != nil {
-			log.Printf("Failed to send email to %v, attempt of %d of %d", email, i + 1, MaxRetries)
-			log.Print(err)
-
 			time.Sleep(time.Second * time.Duration(i + 1))
 			continue
 		}
