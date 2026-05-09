@@ -39,6 +39,9 @@ func (p *Password) Set(text string) error {
 	return nil
 }
 
+func (p *Password) Compare(text string) error {
+	return bcrypt.CompareHashAndPassword(p.Hash, []byte(text))
+}
 
 type UserStore struct {
 	pool *pgxpool.Pool

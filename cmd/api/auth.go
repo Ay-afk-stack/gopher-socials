@@ -107,6 +107,12 @@ func (app *application) createTokenHandler(w http.ResponseWriter, r *http.Reques
 
 	// verify user
 	user, err := app.store.Users.GetByEmail(r.Context(), payload.Email)
+
+	if err := user.Password.Compare(payload.Password); err != nil {
+		app.unAuthorizedError(w, r, err)
+		return
+	}
+
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
