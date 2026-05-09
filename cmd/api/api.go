@@ -94,7 +94,6 @@ func (app *application) mount() http.Handler {
 
 			r.Route("/{userID}", func(r chi.Router) {
 				r.Use(app.AuthTokenMiddleware)
-				r.Use(app.userContextHandler)
 
 				r.Get("/", app.getUserHandler)
 				r.Put("/follow", app.followUserHandler)
