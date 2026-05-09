@@ -16,10 +16,12 @@ type User struct {
 	ID        int64     `json:"id"`
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
-	Password  Password    `json:"-"`
+	Password  Password  `json:"-"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-	IsActive bool `json:"is_active"`
+	IsActive  bool 		`json:"is_active"`
+	RoleID    int64 	`json:"role_id"`
+	Role 	  Role 		`json:"role"`
 }
 
 type Password struct {
@@ -75,9 +77,12 @@ func (s *UserStore) Create(ctx context.Context, tx pgx.Tx, user *User) error {
 
 func (s *UserStore) GetByID(ctx context.Context, userID int64) (*User, error) {
 	query := `
-		SELECT id, username, email, password, created_at
-		FROM users
-		WHERE id = $1 AND is_active = true;
+		SELECT u.id, u.username, u.email, u.password, u.created_at,
+		r.id, r.name, r.level, r.description
+		FROM users u
+		INNER JOIN roles r
+		ON u.role_id = r.id
+		WHERE u.id = $1 AND is_active = true;
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeout)
@@ -91,6 +96,10 @@ func (s *UserStore) GetByID(ctx context.Context, userID int64) (*User, error) {
 		&user.Email,
 		&user.Password.Hash,
 		&user.CreatedAt,
+		&user.Role.Id,
+		&user.Role.Name,
+		&user.Role.Level,
+		&user.Role.Description,
 	); err != nil {
 		switch {
 		case errors.Is(err, pgx.ErrNoRows):

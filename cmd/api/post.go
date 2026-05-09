@@ -43,7 +43,7 @@ func (app *application) createPostHandlers(w http.ResponseWriter, r *http.Reques
 		Title:   payload.Title,
 		Content: payload.Content,
 		Tags:    payload.Tags,
-		UserID:  int64(user.ID),
+		UserID:  user.ID,
 	}
 
 	ctx := r.Context()

@@ -33,3 +33,8 @@ func (app *application) unAuthorizedError(w http.ResponseWriter, r *http.Request
 	WriteJSONError(w, http.StatusUnauthorized, "unauthorized error")
 }
 
+func (app *application) forbiddenError(w http.ResponseWriter, r *http.Request, err error) {
+	app.logger.Warnw("forbidden", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	WriteJSONError(w, http.StatusForbidden, "forbidden")
+}
+

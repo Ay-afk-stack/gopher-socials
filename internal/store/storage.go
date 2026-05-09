@@ -40,6 +40,9 @@ type Storage struct {
 		Follow(context.Context, int64, int64) error
 		UnFollow(context.Context, int64, int64) error
 	}
+	Roles interface {
+		GetByName(context.Context, string) (*Role, error)
+	}
 }
 
 func NewStorage(pool *pgxpool.Pool) Storage {
@@ -48,6 +51,7 @@ func NewStorage(pool *pgxpool.Pool) Storage {
 		Users:     &UserStore{pool},
 		Comments:  &CommentStore{pool},
 		Followers: &FollowerStore{pool},
+		Roles:     &RoleStore{pool},
 	}
 }
 

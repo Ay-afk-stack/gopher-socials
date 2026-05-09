@@ -84,8 +84,9 @@ func (app *application) mount() http.Handler {
 				r.Use(app.postContextMiddleware)
 
 				r.Get("/", app.getPostHandler)
-				r.Delete("/", app.deletePostHandler)
-				r.Patch("/", app.updatePostHandler)
+
+				r.Delete("/", app.CheckPostOwnerShip("admin", app.deletePostHandler))
+				r.Patch("/", app.CheckPostOwnerShip("moderator", app.updatePostHandler))
 			})
 		})
 
