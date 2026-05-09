@@ -22,6 +22,11 @@ type User struct {
 	IsActive bool `json:"is_active"`
 }
 
+type Password struct {
+	Text *string
+	Hash []byte
+}
+
 func (p *Password) Set(text string) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(text), bcrypt.DefaultCost)
 	if err != nil {
@@ -34,11 +39,6 @@ func (p *Password) Set(text string) error {
 	return nil
 }
 
-
-type Password struct {
-	Text *string
-	Hash []byte
-}
 
 type UserStore struct {
 	pool *pgxpool.Pool
@@ -86,7 +86,7 @@ func (s *UserStore) GetByID(ctx context.Context, userID int64) (*User, error) {
 		&user.ID,
 		&user.Username,
 		&user.Email,
-		&user.Password,
+		&user.Password.Hash,
 		&user.CreatedAt,
 	); err != nil {
 		switch {
@@ -250,7 +250,7 @@ func (s *UserStore) delete(ctx context.Context, tx pgx.Tx, id int64) error {
 
 func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error) {
 	query := `
-		SELECT id, username, email, created_at
+		SELECT id, username, email, password,created_at
 		FROM users
 		WHERE email = $1 AND is_active = true;
 	`
@@ -264,6 +264,7 @@ func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error)
 		&user.ID,
 		&user.Username,
 		&user.Email,
+		&user.Password.Hash,
 		&user.CreatedAt,
 	); err != nil {
 		switch err {
