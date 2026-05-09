@@ -30,6 +30,7 @@ type Storage struct {
 		CreateUserInvitation(context.Context, pgx.Tx, string, time.Duration, int64) error
 		Activate(context.Context, string) error
 		Delete(context.Context, int64) error
+		GetByEmail(context.Context, string) (*User, error)
 	}
 	Comments interface {
 		Create(context.Context, *Comment) error

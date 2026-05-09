@@ -1,6 +1,9 @@
 package main
 
 import (
+	"time"
+
+	"github.com/Ay-afk-stack/gopher-socials/internal/auth"
 	"github.com/Ay-afk-stack/gopher-socials/internal/db"
 	"github.com/Ay-afk-stack/gopher-socials/internal/env"
 	"github.com/Ay-afk-stack/gopher-socials/internal/mailer"
@@ -42,6 +45,11 @@ func main() {
 				user: env.GetString("AUTH_BASIC_USER", "admin"),
 				pass: env.GetString("AUTH_BASIC_PASS", "admin"),
 			},
+			token: tokenConfig{
+				secret: env.GetString("AUTH_JWT_SECRET", "example"),
+				exp: time.Hour * 24 * 3,
+				issuer: env.GetString("AUTH_TOKEN_ISSUER", "gopher_socials"),
+			},
 		},
 	}
 
@@ -63,11 +71,14 @@ func main() {
 
 	mailer := mailer.NewResendMailer(cfg.mail.resend.apiKey, cfg.mail.resend.fromEmail)
 
+	jwtAuthenticator := auth.NewJWTAuthenticator(cfg.auth.token.secret, cfg.auth.token.issuer, cfg.auth.token.issuer)
+
 	app := &application{
 		config: cfg,
 		store:  store,
 		logger: logger,
 		mailer: mailer,
+		authenticator: jwtAuthenticator,
 	}
 
 	mux := app.mount()

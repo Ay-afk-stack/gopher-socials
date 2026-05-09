@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Ay-afk-stack/gopher-socials/internal/auth"
 	"github.com/Ay-afk-stack/gopher-socials/internal/mailer"
 	"github.com/Ay-afk-stack/gopher-socials/internal/store"
 	"github.com/go-chi/chi/v5"
@@ -16,6 +17,7 @@ type application struct {
 	store  store.Storage
 	logger *zap.SugaredLogger
 	mailer mailer.Client
+	authenticator auth.Authenticator
 }
 
 type config struct {
@@ -29,6 +31,13 @@ type config struct {
 
 type authConfig struct {
 	basic basicConfig
+	token tokenConfig
+}
+
+type tokenConfig struct {
+	secret string
+	exp time.Duration
+	issuer string
 }
 
 type basicConfig struct {
@@ -98,6 +107,7 @@ func (app *application) mount() http.Handler {
 
 		r.Route("/auth", func (r chi.Router)  {
 			r.Post("/users", app.registerUserHandler)
+			r.Post("/token", app.createTokenHandler)
 		})
 	})
 
