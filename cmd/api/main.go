@@ -8,6 +8,8 @@ import (
 	"github.com/Ay-afk-stack/gopher-socials/internal/env"
 	"github.com/Ay-afk-stack/gopher-socials/internal/mailer"
 	"github.com/Ay-afk-stack/gopher-socials/internal/store"
+	"github.com/Ay-afk-stack/gopher-socials/internal/store/cache"
+	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 )
@@ -31,6 +33,12 @@ func main() {
 			minConns:        env.GetInt("DB_MIN__CONNS", 5),
 			maxConnIdleTime: env.GetString("DB_MAX_IDLE_TIME", "15min"),
 			dbTimeout:       env.GetString("DB_TIMEOUT", "10s"),
+		},
+		redisCfg: redisConfig{
+			addr: env.GetString("REDIS_ADDR", "localhost:6379"),
+			pw: env.GetString("REDIS_PW", ""),
+			db: env.GetInt("REDIS_DB", 0),
+			enabled: env.GetBool("REDIS_ENABLED", true),
 		},
 		env: env.GetString("ENV", "development"),
 		mail: mailConfig{
@@ -65,9 +73,17 @@ func main() {
 	}
 	defer pool.Close()
 
+	var redisDB *redis.Client
+
+	if cfg.redisCfg.enabled {
+		redisDB = cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.pw, cfg.redisCfg.db)
+		logger.Info("redis connection established!")
+	}
+
 	logger.Info("database connection pool established!")
 
 	store := store.NewStorage(pool)
+	cacheStore := cache.NewRedisStorage(redisDB)
 
 	mailer := mailer.NewResendMailer(cfg.mail.resend.apiKey, cfg.mail.resend.fromEmail)
 
@@ -76,6 +92,7 @@ func main() {
 	app := &application{
 		config: cfg,
 		store:  store,
+		cacheStorage: cacheStore,
 		logger: logger,
 		mailer: mailer,
 		authenticator: jwtAuthenticator,

@@ -7,6 +7,7 @@ import (
 	"github.com/Ay-afk-stack/gopher-socials/internal/auth"
 	"github.com/Ay-afk-stack/gopher-socials/internal/mailer"
 	"github.com/Ay-afk-stack/gopher-socials/internal/store"
+	"github.com/Ay-afk-stack/gopher-socials/internal/store/cache"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
@@ -15,6 +16,7 @@ import (
 type application struct {
 	config config
 	store  store.Storage
+	cacheStorage cache.Storage
 	logger *zap.SugaredLogger
 	mailer mailer.Client
 	authenticator auth.Authenticator
@@ -27,6 +29,14 @@ type config struct {
 	mail mailConfig
 	frontendURL string
 	auth authConfig
+	redisCfg redisConfig
+}
+
+type redisConfig struct {
+	addr string
+	pw string
+	db int
+	enabled bool
 }
 
 type authConfig struct {
