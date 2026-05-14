@@ -14,7 +14,7 @@ import (
 	"go.uber.org/zap"
 )
 
-const version = "0.0.1"
+const version = ""
 
 func main() {
 	logger := zap.Must(zap.NewProduction()).Sugar()
