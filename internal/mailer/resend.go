@@ -26,7 +26,7 @@ func NewResendMailer(apiKey, fromEmail string) *ResendMailer {
 
 func (m *ResendMailer) Send(username, email, activationURL string) error {
 
-	from := fmt.Sprintf("%s", m.fromEmail)
+	from := m.fromEmail
 	subject := fmt.Sprintf("Activation link for %s", FromName)
 
 	params := &resend.SendEmailRequest{

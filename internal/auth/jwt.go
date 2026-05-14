@@ -34,7 +34,7 @@ func (a *JWTAuthenticator) GenerateToken(claims jwt.Claims) (string, error) {
 func (a *JWTAuthenticator) VerifyToken(token string) (*jwt.Token, error) {
 	return jwt.Parse(token, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing error!")
+			return nil, fmt.Errorf("unexpected signing error")
 		}
 		return []byte(a.secret), nil
 	},

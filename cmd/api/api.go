@@ -74,7 +74,6 @@ type dbConfig struct {
 	maxConns        int
 	minConns        int
 	maxConnIdleTime string
-	maxConnLifeTime string
 	dbTimeout       string
 }
 
