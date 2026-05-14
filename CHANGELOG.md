@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/Ay-afk-stack/gopher-socials/compare/v1.0.0...v1.1.0) (2026-05-14)
+
+
+### Features
+
+* update api version automatically ([d00b93c](https://github.com/Ay-afk-stack/gopher-socials/commit/d00b93c7b6fc516198417c5fd208b68f467706b0))
+
 ## 1.0.0 (2026-05-14)
 
 
